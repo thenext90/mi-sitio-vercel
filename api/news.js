@@ -1,34 +1,51 @@
-// api/news.js
 export default async function handler(req, res) {
   // Configura CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET');
-
-  const API_KEY = process.env.API_KEY || 'TU_API_KEY'; // Usa variables de entorno
+  
+  const API_KEY = process.env.API_KEY; // ¡Usa siempre variables de entorno!
   const BASE_URL = 'https://newsapi.org/v2';
 
   try {
+    // Opción 1: Noticias globales en inglés (máxima compatibilidad)
     const response = await fetch(
-      `${BASE_URL}/top-headlines?category=technology&language=es&apiKey=${API_KEY}`
+      `${BASE_URL}/top-headlines?pageSize=10&apiKey=${API_KEY}`
     );
 
-    if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`);
+    // Opción 2: Búsqueda genérica en español (si prefieres)
+    // const response = await fetch(
+    //   `${BASE_URL}/everything?q=tecnologia&language=es&sortBy=publishedAt&apiKey=${API_KEY}`
+    // );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Error en NewsAPI');
+    }
 
     const data = await response.json();
-    
+
+    // Si aún está vacío, forzar datos de ejemplo
+    const articles = data.articles.length > 0 ? data.articles : [{
+      title: "Prueba: NewsAPI no devolvió resultados",
+      source: { name: "Sistema" },
+      url: "https://newsapi.org",
+      description: "Modifica los parámetros de búsqueda"
+    }];
+
     res.status(200).json({
       status: 'success',
-      data: data.articles.map(article => ({
+      count: articles.length,
+      articles: articles.map(article => ({
         title: article.title,
-        source: article.source.name,
-        url: article.url
+        source: article.source?.name,
+        url: article.url,
+        description: article.description
       }))
     });
 
   } catch (error) {
     res.status(500).json({
       status: 'error',
-      message: 'Error al obtener noticias',
+      message: 'Error en el servidor',
       details: error.message
     });
   }
