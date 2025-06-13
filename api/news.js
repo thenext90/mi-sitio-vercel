@@ -9,7 +9,7 @@ export default async function handler(req, res) {
     // Parámetros MÍNIMOS requeridos por NewsAPI (elige uno):
   const params = new URLSearchParams({
   apiKey: API_KEY,
-  q: 'inteligencia artificial',  // Palabra clave
+  q: 'IA',  // Palabra clave
   language: 'es',
   sortBy: 'relevancy'            // Ordenar por relevancia
 });
