@@ -430,10 +430,8 @@
 
     <script>
         // Variables globales
-        const API_KEY = "TU_API_KEY"; // Reemplazar con tu API_KEY de Vercel
-        const BASE_URL = "https://newsapi.org/v2";
+        const PROXY_URL = "/api/news"; // Ruta de nuestro proxy en Vercel
         let currentCategory = "general";
-        let currentPage = 1;
         
         // Elementos DOM
         const searchInput = document.getElementById('search-input');
@@ -483,7 +481,7 @@
             fetchNews(currentCategory, query);
         }
         
-        // Obtener noticias de la API
+        // Obtener noticias de la API a través del proxy
         async function fetchNews(category, query = '') {
             // Mostrar estado de carga
             newsGrid.innerHTML = `
@@ -494,16 +492,22 @@
             `;
             
             try {
-                // Construir URL
-                let url;
+                // Construir URL del proxy
+                const params = new URLSearchParams();
+                params.set('category', category);
                 if (query) {
-                    url = `${BASE_URL}/everything?q=${encodeURIComponent(query)}&language=es&sortBy=publishedAt&apiKey=${API_KEY}`;
-                } else {
-                    url = `${BASE_URL}/top-headlines?category=${category}&country=us&pageSize=20&apiKey=${API_KEY}`;
+                    params.set('q', query);
                 }
                 
-                // Hacer la petición
+                const url = `${PROXY_URL}?${params.toString()}`;
+                
+                // Hacer la petición al proxy
                 const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
                 const data = await response.json();
                 
                 // Verificar si hay artículos
@@ -575,41 +579,6 @@
                 return 'Fecha inválida';
             }
         }
-        
-        // Simular carga inicial de noticias
-        setTimeout(() => {
-            // Datos de muestra para simulación
-            const sampleNews = [
-                {
-                    title: "Nuevo avance en la investigación del cáncer",
-                    description: "Científicos descubren un nuevo enfoque prometedor para el tratamiento del cáncer que podría revolucionar la medicina.",
-                    urlToImage: "https://images.unsplash.com/photo-1532938911079-1b06ac7ceec7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
-                    url: "#",
-                    source: { name: "Science Daily" },
-                    publishedAt: "2023-06-15T10:30:00Z"
-                },
-                {
-                    title: "El mercado de valores alcanza máximos históricos",
-                    description: "Los principales índices bursátiles registran ganancias significativas tras los últimos informes económicos positivos.",
-                    urlToImage: "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
-                    url: "#",
-                    source: { name: "Financial Times" },
-                    publishedAt: "2023-06-14T14:45:00Z"
-                },
-                {
-                    title: "Nuevo smartphone con tecnología revolucionaria",
-                    description: "La compañía presenta su último dispositivo móvil con características innovadoras que cambiarán la experiencia del usuario.",
-                    urlToImage: "https://images.unsplash.com/photo-1605236453806-6ff36851218e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
-                    url: "#",
-                    source: { name: "Tech Insider" },
-                    publishedAt: "2023-06-13T09:15:00Z"
-                }
-            ];
-            
-            // Mostrar noticias de muestra inicialmente
-            displayNews(sampleNews, currentCategory);
-            resultsCount.textContent = `${sampleNews.length} resultados`;
-        }, 1500);
     </script>
 </body>
 </html>
