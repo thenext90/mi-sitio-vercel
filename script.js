@@ -1,5 +1,5 @@
-const API_KEY = "fd00630f5a84490cae0e23a3ba61285d"; // Regístrate en https://newsapi.org/ para obtener una clave
-const NEWS_URL = `https://newsapi.org/v2/top-headlines?country=us&apiKey=${API_KEY}`;
+const API_KEY = process.env.API_KEY || 'TU_API_KEY_AQUI';
+const BASE_URL = 'https://newsapi.org/v2';
 
 async function fetchNews() {
     try {
