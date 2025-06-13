@@ -8,7 +8,7 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'GET');
 
   // Tu API Key de NewsAPI (¡usa variables de entorno en producción!)
-  const API_KEY = 'TU_API_KEY'; // Reemplaza con tu key o usa process.env.API_KEY
+  const API_KEY = 'fd00630f5a84490cae0e23a3ba61285d'; // Reemplaza con tu key o usa process.env.API_KEY
   const BASE_URL = 'https://newsapi.org/v2';
 
   try {
