@@ -1,5 +1,5 @@
 // api/news.js
-export default async (req, res) => {
+export default async function handler(req, res) {
   const { category = 'general', q } = req.query;
   const API_KEY = process.env.API_KEY; // Tu clave de NewsAPI
   
@@ -24,4 +24,4 @@ export default async (req, res) => {
     console.error('NewsAPI error:', error);
     res.status(500).json({ error: 'Failed to fetch news' });
   }
-};
+}
