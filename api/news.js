@@ -13,6 +13,12 @@ export default async function handler(req, res) {
   language: 'es',
   sortBy: 'relevancy'            // Ordenar por relevancia
 });
+    const params = new URLSearchParams({
+  apiKey: API_KEY,
+  language: 'es',      // Filtro por idioma
+  pageSize: 10,
+  q: 'tecnologia'      // Palabra clave opcional
+});
     const response = await fetch(`${BASE_URL}/top-headlines?${params}`);
 
     if (!response.ok) {
