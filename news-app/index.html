@@ -205,16 +205,23 @@
             box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
         }
 
-        .news-image {
+        .image-container {
             width: 100%;
             height: 200px;
+            position: relative;
+        }
+
+        .news-image {
+            width: 100%;
+            height: 100%;
             object-fit: cover;
             border-top-left-radius: 16px;
             border-top-right-radius: 16px;
         }
 
         .no-image {
-            height: 200px;
+            width: 100%;
+            height: 100%;
             background: linear-gradient(45deg, #4f46e5, #7c3aed);
             display: flex;
             align-items: center;
@@ -542,26 +549,36 @@
                 return;
             }
             
-            newsGrid.innerHTML = articles.map(article => `
-                <div class="news-card">
-                    ${article.urlToImage ? 
-                        `<img src="${article.urlToImage}" alt="${article.title}" class="news-image">` : 
-                        `<div class="no-image"><i class="fas fa-image"></i></div>`
-                    }
-                    <div class="news-content">
-                        <div class="news-category">${category.charAt(0).toUpperCase() + category.slice(1)}</div>
-                        <h3 class="news-title">${article.title || 'Sin título'}</h3>
-                        <p class="news-description">${article.description || 'No hay descripción disponible.'}</p>
-                        <a href="${article.url}" target="_blank" class="read-more">
-                            Leer más <i class="fas fa-arrow-right"></i>
-                        </a>
-                        <div class="news-footer">
-                            <span class="news-source">${article.source?.name || 'Fuente desconocida'}</span>
-                            <span class="news-date">${formatDate(article.publishedAt)}</span>
+            newsGrid.innerHTML = articles.map(article => {
+                // Solucionar problema de imágenes HTTP
+                let imageUrl = article.urlToImage;
+                if (imageUrl && imageUrl.startsWith('http://')) {
+                    imageUrl = 'https://' + imageUrl.substring(7);
+                }
+                
+                return `
+                    <div class="news-card">
+                        <div class="image-container">
+                            ${imageUrl ? 
+                                `<img src="${imageUrl}" alt="${article.title}" class="news-image">` : 
+                                `<div class="no-image"><i class="fas fa-image"></i></div>`
+                            }
+                        </div>
+                        <div class="news-content">
+                            <div class="news-category">${category.charAt(0).toUpperCase() + category.slice(1)}</div>
+                            <h3 class="news-title">${article.title || 'Sin título'}</h3>
+                            <p class="news-description">${article.description || 'No hay descripción disponible.'}</p>
+                            <a href="${article.url}" target="_blank" class="read-more">
+                                Leer más <i class="fas fa-arrow-right"></i>
+                            </a>
+                            <div class="news-footer">
+                                <span class="news-source">${article.source?.name || 'Fuente desconocida'}</span>
+                                <span class="news-date">${formatDate(article.publishedAt)}</span>
+                            </div>
                         </div>
                     </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
         
         // Formatear fecha
