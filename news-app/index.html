@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NewsFinder - Buscador de Noticias</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary: #4f46e5;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --gray: #94a3b8;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+            color: var(--light);
+            min-height: 100vh;
+            padding-bottom: 2rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+        }
+
+        header {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        .logo i {
+            color: var(--primary);
+        }
+
+        .search-section {
+            background: rgba(30, 41, 59, 0.6);
+            border-radius: 16px;
+            padding: 2.5rem;
+            margin: 2rem 0;
+            box-shadow: 0 8px 32px rgba(2, 8, 32, 0.3);
+        }
+
+        .section-title {
+            font-size: 2.25rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+        }
+
+        .search-container {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 0.9rem 1.25rem;
+            border: none;
+            border-radius: 12px;
+            background: rgba(15, 23, 42, 0.7);
+            color: white;
+            font-size: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.3);
+        }
+
+        .search-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 0 1.75rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(37, 99, 235, 0.3);
+        }
+
+        .search-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .search-btn:active {
+            transform: translateY(0);
+        }
+
+        .categories {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            justify-content: center;
+            margin-top: 1.5rem;
+        }
+
+        .category-btn {
+            background: rgba(15, 23, 42, 0.7);
+            color: var(--gray);
+            border: 2px solid rgba(148, 163, 184, 0.2);
+            border-radius: 50px;
+            padding: 0.6rem 1.5rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .category-btn:hover, .category-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .results-container {
+            margin-top: 2rem;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .results-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .results-count {
+            background: var(--dark);
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .news-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.75rem;
+        }
+
+        .news-card {
+            background: rgba(30, 41, 59, 0.6);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .news-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+        }
+
+        .news-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-top-left-radius: 16px;
+            border-top-right-radius: 16px;
+        }
+
+        .no-image {
+            height: 200px;
+            background: linear-gradient(45deg, #4f46e5, #7c3aed);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2rem;
+        }
+
+        .news-content {
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        .news-category {
+            background: var(--primary);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            align-self: flex-start;
+            margin-bottom: 0.75rem;
+        }
+
+        .news-title {
+            font-size: 1.25rem;
+            margin-bottom: 0.75rem;
+            line-height: 1.4;
+            flex: 1;
+        }
+
+        .news-description {
+            color: var(--gray);
+            font-size: 0.95rem;
+            margin-bottom: 1rem;
+            line-height: 1.5;
+        }
+
+        .news-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: auto;
+        }
+
+        .news-source {
+            font-size: 0.85rem;
+            color: var(--gray);
+        }
+
+        .news-date {
+            font-size: 0.85rem;
+            color: var(--gray);
+        }
+
+        .read-more {
+            background: transparent;
+            color: var(--primary);
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 0.5rem 0;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .read-more:hover {
+            text-decoration: underline;
+        }
+
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 3rem;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid var(--danger);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            margin: 2rem 0;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 3rem;
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .search-container {
+                flex-direction: column;
+            }
+            
+            .categories {
+                gap: 0.5rem;
+            }
+            
+            .category-btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.8rem;
+            }
+            
+            .news-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-newspaper"></i>
+                    <span>NewsFinder</span>
+                </div>
+                <div class="api-info">
+                    Powered by NewsAPI.org
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <section class="search-section">
+            <h1 class="section-title">Encuentra las últimas noticias</h1>
+            
+            <div class="search-container">
+                <input 
+                    type="text" 
+                    class="search-input" 
+                    id="search-input" 
+                    placeholder="Buscar noticias sobre..."
+                >
+                <button class="search-btn" id="search-btn">
+                    <i class="fas fa-search"></i> Buscar
+                </button>
+            </div>
+            
+            <div class="categories" id="categories">
+                <button class="category-btn active" data-category="general">General</button>
+                <button class="category-btn" data-category="business">Negocios</button>
+                <button class="category-btn" data-category="entertainment">Entretenimiento</button>
+                <button class="category-btn" data-category="health">Salud</button>
+                <button class="category-btn" data-category="science">Ciencia</button>
+                <button class="category-btn" data-category="sports">Deportes</button>
+                <button class="category-btn" data-category="technology">Tecnología</button>
+            </div>
+        </section>
+        
+        <section class="results-container">
+            <div class="results-header">
+                <h2 class="results-title">Últimas Noticias</h2>
+                <div class="results-count" id="results-count">20 resultados</div>
+            </div>
+            
+            <div class="news-grid" id="news-grid">
+                <!-- Las noticias se cargarán aquí dinámicamente -->
+            </div>
+        </section>
+        
+        <div class="footer">
+            <p>© 2023 NewsFinder - Todos los derechos reservados</p>
+            <p>Este sitio utiliza la API de NewsAPI.org</p>
+        </div>
+    </div>
+
+    <script>
+        // Variables globales
+        const API_KEY = "tu_api_key_de_vercel"; // Esta variable se configurará en Vercel
+        const BASE_URL = "https://newsapi.org/v2";
+        let currentCategory = "general";
+        let currentPage = 1;
+        
+        // Elementos DOM
+        const searchInput = document.getElementById('search-input');
+        const searchBtn = document.getElementById('search-btn');
+        const categoriesContainer = document.getElementById('categories');
+        const newsGrid = document.getElementById('news-grid');
+        const resultsCount = document.getElementById('results-count');
+        
+        // Categorías
+        const categories = [
+            'general', 'business', 'entertainment', 
+            'health', 'science', 'sports', 'technology'
+        ];
+        
+        // Inicializar la aplicación
+        document.addEventListener('DOMContentLoaded', () => {
+            // Cargar noticias iniciales
+            fetchNews(currentCategory);
+            
+            // Configurar eventos
+            searchBtn.addEventListener('click', handleSearch);
+            searchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') handleSearch();
+            });
+            
+            // Configurar eventos de categorías
+            categoriesContainer.addEventListener('click', (e) => {
+                if (e.target.classList.contains('category-btn')) {
+                    // Actualizar botones activos
+                    document.querySelectorAll('.category-btn').forEach(btn => {
+                        btn.classList.remove('active');
+                    });
+                    e.target.classList.add('active');
+                    
+                    // Actualizar categoría actual
+                    currentCategory = e.target.dataset.category;
+                    
+                    // Realizar nueva búsqueda
+                    fetchNews(currentCategory, searchInput.value.trim());
+                }
+            });
+        });
+        
+        // Manejar búsqueda
+        function handleSearch() {
+            const query = searchInput.value.trim();
+            fetchNews(currentCategory, query);
+        }
+        
+        // Obtener noticias de la API
+        async function fetchNews(category, query = '') {
+            // Mostrar estado de carga
+            newsGrid.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Cargando noticias...</p>
+                </div>
+            `;
+            
+            try {
+                // Construir URL
+                let url;
+                if (query) {
+                    url = `${BASE_URL}/everything?q=${encodeURIComponent(query)}&language=es&sortBy=publishedAt&apiKey=${API_KEY}`;
+                } else {
+                    url = `${BASE_URL}/top-headlines?category=${category}&country=us&pageSize=20&apiKey=${API_KEY}`;
+                }
+                
+                // Hacer la petición
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                // Mostrar resultados
+                displayNews(data.articles);
+                resultsCount.textContent = `${data.articles.length} resultados`;
+            } catch (error) {
+                console.error('Error fetching news:', error);
+                newsGrid.innerHTML = `
+                    <div class="error-message">
+                        <h3><i class="fas fa-exclamation-triangle"></i> Error al cargar noticias</h3>
+                        <p>Por favor, inténtalo de nuevo más tarde.</p>
+                        <p>Detalles: ${error.message}</p>
+                    </div>
+                `;
+                resultsCount.textContent = "0 resultados";
+            }
+        }
+        
+        // Mostrar noticias en el grid
+        function displayNews(articles) {
+            if (!articles || articles.length === 0) {
+                newsGrid.innerHTML = `
+                    <div class="error-message">
+                        <h3><i class="fas fa-newspaper"></i> No se encontraron noticias</h3>
+                        <p>Intenta con otra categoría o término de búsqueda.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            newsGrid.innerHTML = articles.map(article => `
+                <div class="news-card">
+                    ${article.urlToImage ? 
+                        `<img src="${article.urlToImage}" alt="${article.title}" class="news-image">` : 
+                        `<div class="no-image"><i class="fas fa-image"></i></div>`
+                    }
+                    <div class="news-content">
+                        <div class="news-category">${currentCategory.charAt(0).toUpperCase() + currentCategory.slice(1)}</div>
+                        <h3 class="news-title">${article.title}</h3>
+                        <p class="news-description">${article.description || 'No hay descripción disponible.'}</p>
+                        <a href="${article.url}" target="_blank" class="read-more">
+                            Leer más <i class="fas fa-arrow-right"></i>
+                        </a>
+                        <div class="news-footer">
+                            <span class="news-source">${article.source.name}</span>
+                            <span class="news-date">${formatDate(article.publishedAt)}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // Formatear fecha
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('es-ES', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        }
+        
+        // Datos de muestra para simulación
+        const sampleNews = [
+            {
+                title: "Nuevo avance en la investigación del cáncer",
+                description: "Científicos descubren un nuevo enfoque prometedor para el tratamiento del cáncer que podría revolucionar la medicina.",
+                urlToImage: "https://images.unsplash.com/photo-1532938911079-1b06ac7ceec7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
+                url: "#",
+                source: { name: "Science Daily" },
+                publishedAt: "2023-06-15T10:30:00Z"
+            },
+            {
+                title: "El mercado de valores alcanza máximos históricos",
+                description: "Los principales índices bursátiles registran ganancias significativas tras los últimos informes económicos positivos.",
+                urlToImage: "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
+                url: "#",
+                source: { name: "Financial Times" },
+                publishedAt: "2023-06-14T14:45:00Z"
+            },
+            {
+                title: "Nuevo smartphone con tecnología revolucionaria",
+                description: "La compañía presenta su último dispositivo móvil con características innovadoras que cambiarán la experiencia del usuario.",
+                urlToImage: "https://images.unsplash.com/photo-1605236453806-6ff36851218e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
+                url: "#",
+                source: { name: "Tech Insider" },
+                publishedAt: "2023-06-13T09:15:00Z"
+            }
+        ];
+        
+        // Mostrar noticias de muestra inicialmente
+        displayNews(sampleNews);
+    </script>
+</body>
+</html>
