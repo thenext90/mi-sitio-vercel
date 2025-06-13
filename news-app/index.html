@@ -210,6 +210,9 @@
             height: 200px;
             position: relative;
             background: linear-gradient(45deg, #4f46e5, #7c3aed);
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .news-image {
@@ -221,14 +224,8 @@
         }
 
         .no-image {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             color: white;
             font-size: 2rem;
-            background: linear-gradient(45deg, #4f46e5, #7c3aed);
         }
 
         .news-content {
@@ -439,6 +436,7 @@
     <script>
         // Variables globales
         const PROXY_URL = "/api/news"; // Ruta de nuestro proxy en Vercel
+        const IMAGE_PROXY_URL = "/api/image?url="; // Proxy de imágenes
         let currentCategory = "general";
         
         // Elementos DOM
@@ -538,6 +536,30 @@
             }
         }
         
+        // Función para obtener URL segura de imagen
+        function getSafeImageUrl(originalUrl) {
+            if (!originalUrl) return null;
+            
+            try {
+                // Crear URL para validación
+                const url = new URL(originalUrl);
+                
+                // Convertir HTTP a HTTPS
+                if (url.protocol === 'http:') {
+                    url.protocol = 'https:';
+                }
+                
+                // Comprobar si es una URL de imagen válida
+                if (url.hostname && url.pathname.match(/\.(jpeg|jpg|gif|png)$/)) {
+                    return IMAGE_PROXY_URL + encodeURIComponent(url.toString());
+                }
+            } catch (e) {
+                console.warn('URL de imagen inválida:', originalUrl);
+            }
+            
+            return null;
+        }
+        
         // Mostrar noticias en el grid
         function displayNews(articles, category) {
             if (!articles || articles.length === 0) {
@@ -551,31 +573,16 @@
             }
             
             newsGrid.innerHTML = articles.map(article => {
-                // Solucionar problema de imágenes HTTP y manejar errores
-                let imageUrl = article.urlToImage;
-                let imageElement = '';
-                
-                if (imageUrl) {
-                    // Forzar HTTPS para todas las imágenes
-                    if (imageUrl.startsWith('http://')) {
-                        imageUrl = 'https://' + imageUrl.substring(7);
-                    }
-                    
-                    // Crear elemento de imagen con manejador de errores
-                    imageElement = `
-                        <img 
-                            src="${imageUrl}" 
-                            alt="${article.title || 'Imagen de noticia'}" 
-                            class="news-image"
-                            onerror="this.onerror=null; this.parentElement.classList.add('no-image'); this.remove();"
-                        >
-                    `;
-                }
+                // Obtener URL segura de la imagen
+                const imageUrl = getSafeImageUrl(article.urlToImage);
                 
                 return `
                     <div class="news-card">
-                        <div class="image-container ${!imageUrl ? 'no-image' : ''}">
-                            ${imageElement || '<i class="fas fa-image"></i>'}
+                        <div class="image-container">
+                            ${imageUrl ? 
+                                `<img src="${imageUrl}" alt="${article.title || 'Imagen de noticia'}" class="news-image">` : 
+                                `<div class="no-image"><i class="fas fa-image"></i></div>`
+                            }
                         </div>
                         <div class="news-content">
                             <div class="news-category">${category.charAt(0).toUpperCase() + category.slice(1)}</div>
@@ -603,7 +610,9 @@
                 return date.toLocaleDateString('es-ES', {
                     year: 'numeric',
                     month: 'short',
-                    day: 'numeric'
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
                 });
             } catch (e) {
                 return 'Fecha inválida';
@@ -611,17 +620,15 @@
         }
         
         // Manejar errores de imágenes globalmente
-        window.addEventListener('DOMContentLoaded', () => {
-            document.addEventListener('error', (e) => {
-                if (e.target.tagName.toLowerCase() === 'img') {
-                    const container = e.target.closest('.image-container');
-                    if (container && !container.classList.contains('no-image')) {
-                        container.classList.add('no-image');
-                        e.target.remove();
-                    }
+        document.addEventListener('error', (e) => {
+            if (e.target.tagName.toLowerCase() === 'img') {
+                const container = e.target.closest('.image-container');
+                if (container) {
+                    // Reemplazar imagen fallida con placeholder
+                    container.innerHTML = '<div class="no-image"><i class="fas fa-image"></i></div>';
                 }
-            }, true);
-        });
+            }
+        }, true);
     </script>
 </body>
 </html>
