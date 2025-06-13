@@ -1,12 +1,14 @@
 export default async function handler(req, res) {
-  // Configura CORS
+  // Configura CORS para permitir solicitudes desde tu frontend
   res.setHeader('Access-Control-Allow-Origin', '*');
   
-  const API_KEY = process.env.API_KEY; // Asegúrate de tener esta variable en Vercel
+  // Asegúrate de que esta variable de entorno esté configurada en Vercel
+  const API_KEY = process.env.API_KEY; 
   const BASE_URL = 'https://newsapi.org/v2';
 
   // Obtener parámetros de la query string del frontend
-  const { q, category, language } = req.query; // 'q' para búsqueda, 'category' para categoría, 'language' para idioma
+  // 'q' para búsqueda, 'category' para categoría, 'language' para idioma
+  const { q, category, language } = req.query; 
 
   try {
     let url;
@@ -15,39 +17,31 @@ export default async function handler(req, res) {
       pageSize: 20 // Aumentamos un poco el tamaño de la página para más resultados
     });
 
-    // Lógica para determinar qué endpoint de NewsAPI usar
+    // Lógica para determinar qué endpoint de NewsAPI usar basado en los parámetros
     if (q) {
-      // Si hay un término de búsqueda, usamos el endpoint /everything
+      // Si hay un término de búsqueda (q), usamos el endpoint /everything
       url = `${BASE_URL}/everything`;
       params.append('q', q);
-      // Opcional: Puedes agregar un idioma específico para la búsqueda global
-      if (language) {
-        params.append('language', language);
-      } else {
-        params.append('language', 'en'); // Por defecto a inglés para búsquedas generales si no se especifica
-      }
+      // NewsAPI recomienda un idioma para /everything. Por defecto a 'en' si no se especifica.
+      params.append('language', language || 'en'); 
       params.append('sortBy', 'relevancy'); // Ordenar por relevancia para búsquedas
       
     } else if (category) {
-      // Si hay una categoría, usamos el endpoint /top-headlines con la categoría
+      // Si hay una categoría (category) pero no hay búsqueda, usamos /top-headlines con la categoría
       url = `${BASE_URL}/top-headlines`;
       params.append('category', category);
-      if (language) {
-        params.append('language', language);
-      } else {
-        params.append('language', 'us'); // Por defecto a español si no se especifica
-      }
-      params.append('country', language === 'es' ? 'ar' : 'us'); // País basado en el idioma, o 'us' por defecto
+      // Para /top-headlines, es necesario un 'country'. Ajustamos basado en el idioma, si es 'es', usamos 'ar' como ejemplo.
+      params.append('language', language || 'es'); // Por defecto a español si no se especifica
+      // IMPORTANTE: Cambia 'ar' (Argentina) al código de país de tu preferencia si tu audiencia principal es otra.
+      // Ej: 'mx' (México), 'co' (Colombia), 'es' (España), 'us' (EE.UU.)
+      params.append('country', (language === 'es' || !language) ? 'ar' : 'us'); 
       
     } else {
-      // Si no hay búsqueda ni categoría, usamos /top-headlines general (por defecto)
+      // Si no hay búsqueda ni categoría (carga inicial), usamos /top-headlines general
       url = `${BASE_URL}/top-headlines`;
-      if (language) {
-        params.append('language', language);
-      } else {
-        params.append('language', 'es'); // Por defecto a español si no se especifica
-      }
-      params.append('country', language === 'es' ? 'ar' : 'us'); // País basado en el idioma, o 'us' por defecto
+      params.append('language', language || 'es'); // Por defecto a español si no se especifica
+      // Default country for initial load or if no specific filter is applied
+      params.append('country', (language === 'es' || !language) ? 'ar' : 'us'); 
     }
 
     const response = await fetch(`${url}?${params}`);
