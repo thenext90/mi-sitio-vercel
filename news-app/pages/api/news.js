@@ -1,28 +1,27 @@
-export default async function handler(req, res) {
+// api/news.js
+export default async (req, res) => {
   const { category = 'general', q } = req.query;
-  const apiKey = process.env.API_KEY;
+  const API_KEY = process.env.API_KEY; // Tu clave de NewsAPI
   
-  if (!apiKey) {
+  if (!API_KEY) {
     return res.status(500).json({ error: 'API key not configured' });
   }
 
   try {
-    let url = `https://newsapi.org/v2/top-headlines?country=us&category=${category}&apiKey=${apiKey}`;
-    
+    let url;
     if (q) {
-      url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(q)}&apiKey=${apiKey}`;
+      url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(q)}&language=es&apiKey=${API_KEY}`;
+    } else {
+      url = `https://newsapi.org/v2/top-headlines?category=${category}&country=us&apiKey=${API_KEY}`;
     }
 
     const response = await fetch(url);
     const data = await response.json();
     
-    if (data.status === 'error') {
-      return res.status(400).json({ error: data.message });
-    }
-
+    // Enviar los datos al cliente
     res.status(200).json(data);
   } catch (error) {
     console.error('NewsAPI error:', error);
     res.status(500).json({ error: 'Failed to fetch news' });
   }
-}
+};
