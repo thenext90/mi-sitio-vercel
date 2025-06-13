@@ -1,0 +1,33 @@
+{
+  "name": "noticias-globales",
+  "version": "1.0.0",
+  "description": "Una aplicación web moderna para mostrar noticias en tiempo real usando NewsAPI",
+  "main": "index.html",
+  "scripts": {
+    "start": "python3 -m http.server 3000",
+    "dev": "python3 -m http.server 8000",
+    "build": "echo 'No build process needed for static site'"
+  },
+  "keywords": [
+    "news",
+    "newsapi",
+    "frontend",
+    "javascript",
+    "html",
+    "css",
+    "vercel",
+    "responsive",
+    "noticias"
+  ],
+  "author": "Manus AI",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tu-usuario/noticias-globales"
+  },
+  "homepage": "https://tu-proyecto.vercel.app",
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
+
