@@ -1,5 +1,5 @@
 // Configuración de la API
-const API_ROUTE = '/api/fetchNews'; // Ruta a nuestra API route en Vercel
+const API_ROUTE = '/api/fetchNews'; // Asegúrate que coincida con tu ruta en Vercel
 let currentCategory = 'general';
 let currentPage = 1;
 let isLoading = false;
