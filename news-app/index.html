@@ -119,6 +119,9 @@
             cursor: pointer;
             transition: all 0.3s ease;
             box-shadow: 0 4px 6px rgba(37, 99, 235, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
         .search-btn:hover {
@@ -236,6 +239,7 @@
             font-weight: 600;
             align-self: flex-start;
             margin-bottom: 0.75rem;
+            text-transform: capitalize;
         }
 
         .news-title {
@@ -262,6 +266,10 @@
         .news-source {
             font-size: 0.85rem;
             color: var(--gray);
+            max-width: 60%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .news-date {
@@ -280,6 +288,7 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            text-decoration: none;
         }
 
         .read-more:hover {
@@ -293,6 +302,7 @@
             padding: 3rem;
             flex-direction: column;
             gap: 1.5rem;
+            grid-column: 1 / -1;
         }
 
         .spinner {
@@ -315,6 +325,7 @@
             padding: 1.5rem;
             text-align: center;
             margin: 2rem 0;
+            grid-column: 1 / -1;
         }
 
         .footer {
@@ -345,6 +356,12 @@
             
             .news-grid {
                 grid-template-columns: 1fr;
+            }
+            
+            .results-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
             }
         }
     </style>
@@ -398,7 +415,10 @@
             </div>
             
             <div class="news-grid" id="news-grid">
-                <!-- Las noticias se cargarán aquí dinámicamente -->
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Cargando noticias...</p>
+                </div>
             </div>
         </section>
         
@@ -410,7 +430,7 @@
 
     <script>
         // Variables globales
-        const API_KEY = "tu_api_key_de_vercel"; // Esta variable se configurará en Vercel
+        const API_KEY = "TU_API_KEY"; // Reemplazar con tu API_KEY de Vercel
         const BASE_URL = "https://newsapi.org/v2";
         let currentCategory = "general";
         let currentPage = 1;
@@ -486,16 +506,20 @@
                 const response = await fetch(url);
                 const data = await response.json();
                 
-                // Mostrar resultados
-                displayNews(data.articles);
-                resultsCount.textContent = `${data.articles.length} resultados`;
+                // Verificar si hay artículos
+                if (data.articles && Array.isArray(data.articles)) {
+                    displayNews(data.articles, category);
+                    resultsCount.textContent = `${data.articles.length} resultados`;
+                } else {
+                    throw new Error(data.message || 'No se encontraron artículos');
+                }
             } catch (error) {
                 console.error('Error fetching news:', error);
                 newsGrid.innerHTML = `
                     <div class="error-message">
                         <h3><i class="fas fa-exclamation-triangle"></i> Error al cargar noticias</h3>
-                        <p>Por favor, inténtalo de nuevo más tarde.</p>
-                        <p>Detalles: ${error.message}</p>
+                        <p>${error.message || 'Por favor, inténtalo de nuevo más tarde.'}</p>
+                        ${error.message.includes('apiKey') ? '<p>Verifica que tu API_KEY sea válida</p>' : ''}
                     </div>
                 `;
                 resultsCount.textContent = "0 resultados";
@@ -503,7 +527,7 @@
         }
         
         // Mostrar noticias en el grid
-        function displayNews(articles) {
+        function displayNews(articles, category) {
             if (!articles || articles.length === 0) {
                 newsGrid.innerHTML = `
                     <div class="error-message">
@@ -521,14 +545,14 @@
                         `<div class="no-image"><i class="fas fa-image"></i></div>`
                     }
                     <div class="news-content">
-                        <div class="news-category">${currentCategory.charAt(0).toUpperCase() + currentCategory.slice(1)}</div>
-                        <h3 class="news-title">${article.title}</h3>
+                        <div class="news-category">${category.charAt(0).toUpperCase() + category.slice(1)}</div>
+                        <h3 class="news-title">${article.title || 'Sin título'}</h3>
                         <p class="news-description">${article.description || 'No hay descripción disponible.'}</p>
                         <a href="${article.url}" target="_blank" class="read-more">
                             Leer más <i class="fas fa-arrow-right"></i>
                         </a>
                         <div class="news-footer">
-                            <span class="news-source">${article.source.name}</span>
+                            <span class="news-source">${article.source?.name || 'Fuente desconocida'}</span>
                             <span class="news-date">${formatDate(article.publishedAt)}</span>
                         </div>
                     </div>
@@ -538,44 +562,54 @@
         
         // Formatear fecha
         function formatDate(dateString) {
-            const date = new Date(dateString);
-            return date.toLocaleDateString('es-ES', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric'
-            });
+            if (!dateString) return 'Fecha desconocida';
+            
+            try {
+                const date = new Date(dateString);
+                return date.toLocaleDateString('es-ES', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+            } catch (e) {
+                return 'Fecha inválida';
+            }
         }
         
-        // Datos de muestra para simulación
-        const sampleNews = [
-            {
-                title: "Nuevo avance en la investigación del cáncer",
-                description: "Científicos descubren un nuevo enfoque prometedor para el tratamiento del cáncer que podría revolucionar la medicina.",
-                urlToImage: "https://images.unsplash.com/photo-1532938911079-1b06ac7ceec7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
-                url: "#",
-                source: { name: "Science Daily" },
-                publishedAt: "2023-06-15T10:30:00Z"
-            },
-            {
-                title: "El mercado de valores alcanza máximos históricos",
-                description: "Los principales índices bursátiles registran ganancias significativas tras los últimos informes económicos positivos.",
-                urlToImage: "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
-                url: "#",
-                source: { name: "Financial Times" },
-                publishedAt: "2023-06-14T14:45:00Z"
-            },
-            {
-                title: "Nuevo smartphone con tecnología revolucionaria",
-                description: "La compañía presenta su último dispositivo móvil con características innovadoras que cambiarán la experiencia del usuario.",
-                urlToImage: "https://images.unsplash.com/photo-1605236453806-6ff36851218e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
-                url: "#",
-                source: { name: "Tech Insider" },
-                publishedAt: "2023-06-13T09:15:00Z"
-            }
-        ];
-        
-        // Mostrar noticias de muestra inicialmente
-        displayNews(sampleNews);
+        // Simular carga inicial de noticias
+        setTimeout(() => {
+            // Datos de muestra para simulación
+            const sampleNews = [
+                {
+                    title: "Nuevo avance en la investigación del cáncer",
+                    description: "Científicos descubren un nuevo enfoque prometedor para el tratamiento del cáncer que podría revolucionar la medicina.",
+                    urlToImage: "https://images.unsplash.com/photo-1532938911079-1b06ac7ceec7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
+                    url: "#",
+                    source: { name: "Science Daily" },
+                    publishedAt: "2023-06-15T10:30:00Z"
+                },
+                {
+                    title: "El mercado de valores alcanza máximos históricos",
+                    description: "Los principales índices bursátiles registran ganancias significativas tras los últimos informes económicos positivos.",
+                    urlToImage: "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
+                    url: "#",
+                    source: { name: "Financial Times" },
+                    publishedAt: "2023-06-14T14:45:00Z"
+                },
+                {
+                    title: "Nuevo smartphone con tecnología revolucionaria",
+                    description: "La compañía presenta su último dispositivo móvil con características innovadoras que cambiarán la experiencia del usuario.",
+                    urlToImage: "https://images.unsplash.com/photo-1605236453806-6ff36851218e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
+                    url: "#",
+                    source: { name: "Tech Insider" },
+                    publishedAt: "2023-06-13T09:15:00Z"
+                }
+            ];
+            
+            // Mostrar noticias de muestra inicialmente
+            displayNews(sampleNews, currentCategory);
+            resultsCount.textContent = `${sampleNews.length} resultados`;
+        }, 1500);
     </script>
 </body>
 </html>
