@@ -436,7 +436,6 @@
     <script>
         // Variables globales
         const PROXY_URL = "/api/news"; // Ruta de nuestro proxy en Vercel
-        const IMAGE_PROXY_URL = "/api/image?url="; // Proxy de imágenes
         let currentCategory = "general";
         
         // Elementos DOM
@@ -536,28 +535,16 @@
             }
         }
         
-        // Función para obtener URL segura de imagen
-        function getSafeImageUrl(originalUrl) {
-            if (!originalUrl) return null;
+        // Función para forzar HTTPS en las URLs de imágenes
+        function getSecureImageUrl(url) {
+            if (!url) return null;
             
-            try {
-                // Crear URL para validación
-                const url = new URL(originalUrl);
-                
-                // Convertir HTTP a HTTPS
-                if (url.protocol === 'http:') {
-                    url.protocol = 'https:';
-                }
-                
-                // Comprobar si es una URL de imagen válida
-                if (url.hostname && url.pathname.match(/\.(jpeg|jpg|gif|png)$/)) {
-                    return IMAGE_PROXY_URL + encodeURIComponent(url.toString());
-                }
-            } catch (e) {
-                console.warn('URL de imagen inválida:', originalUrl);
+            // Forzar HTTPS
+            if (url.startsWith('http://')) {
+                return 'https://' + url.substring(7);
             }
             
-            return null;
+            return url;
         }
         
         // Mostrar noticias en el grid
@@ -574,13 +561,18 @@
             
             newsGrid.innerHTML = articles.map(article => {
                 // Obtener URL segura de la imagen
-                const imageUrl = getSafeImageUrl(article.urlToImage);
+                const imageUrl = getSecureImageUrl(article.urlToImage);
                 
                 return `
                     <div class="news-card">
                         <div class="image-container">
                             ${imageUrl ? 
-                                `<img src="${imageUrl}" alt="${article.title || 'Imagen de noticia'}" class="news-image">` : 
+                                `<img 
+                                    src="${imageUrl}" 
+                                    alt="${article.title || 'Imagen de noticia'}" 
+                                    class="news-image"
+                                    onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'no-image\'><i class=\'fas fa-image\'></i></div>';"
+                                >` : 
                                 `<div class="no-image"><i class="fas fa-image"></i></div>`
                             }
                         </div>
@@ -618,17 +610,6 @@
                 return 'Fecha inválida';
             }
         }
-        
-        // Manejar errores de imágenes globalmente
-        document.addEventListener('error', (e) => {
-            if (e.target.tagName.toLowerCase() === 'img') {
-                const container = e.target.closest('.image-container');
-                if (container) {
-                    // Reemplazar imagen fallida con placeholder
-                    container.innerHTML = '<div class="no-image"><i class="fas fa-image"></i></div>';
-                }
-            }
-        }, true);
     </script>
 </body>
 </html>
