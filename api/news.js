@@ -7,18 +7,14 @@ export default async function handler(req, res) {
 
   try {
     // Parámetros MÍNIMOS requeridos por NewsAPI (elige uno):
-  const params = new URLSearchParams({
-  apiKey: API_KEY,
-  q: 'IA',  // Palabra clave
-  language: 'es',
-  sortBy: 'relevancy'            // Ordenar por relevancia
-});
     const params = new URLSearchParams({
-  apiKey: API_KEY,
-  language: 'es',      // Filtro por idioma
-  pageSize: 10,
-  q: 'tecnologia'      // Palabra clave opcional
-});
+      apiKey: API_KEY,
+      country: 'us',       // Ejemplo: Noticias de EE.UU.
+      // category: 'technology',  // Alternativa 1
+      // language: 'es',          // Alternativa 2
+      pageSize: 10         // Límite de resultados
+    });
+
     const response = await fetch(`${BASE_URL}/top-headlines?${params}`);
 
     if (!response.ok) {
