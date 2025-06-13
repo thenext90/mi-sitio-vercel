@@ -1,6 +1,7 @@
 // Configuración de la API
-const API_KEY = process.env.API_KEY || 'TU_API_KEY_AQUI';
-const BASE_URL = 'https://newsapi.org/v2';
+const API_ROUTE = '/api/fetchNews'; // Nueva ruta de la API
+const BASE_URL = 'https://newsapi.org/v2'; // Puedes mantener esto como referencia
+
 
 // Variables globales
 let currentCategory = 'general';
