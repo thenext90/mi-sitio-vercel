@@ -1,9 +1,5 @@
 // Configuración de la API
-const API_ROUTE = '/api/fetchNews'; // Nueva ruta de la API
-const BASE_URL = 'https://newsapi.org/v2'; // Puedes mantener esto como referencia
-
-
-// Variables globales
+const API_ROUTE = '/api/fetchNews'; // Ruta a nuestra API route en Vercel
 let currentCategory = 'general';
 let currentPage = 1;
 let isLoading = false;
@@ -34,12 +30,6 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function initializeApp() {
-    // Verificar si hay API key
-    if (API_KEY === 'TU_API_KEY_AQUI') {
-        showApiKeyError();
-        return;
-    }
-
     // Event listeners
     setupEventListeners();
     
@@ -111,22 +101,28 @@ async function loadNews() {
     try {
         const url = buildApiUrl();
         const response = await fetch(url);
+        
+        if (!response.ok) {
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+        
         const data = await response.json();
 
-        if (data.status === 'ok') {
+        if (data.articles) {
             displayNews(data.articles);
             
-            // Mostrar botón "Cargar más" si hay más resultados
             if (data.totalResults > currentPage * 20) {
                 showLoadMoreButton();
             } else {
                 hideLoadMoreButton();
             }
+        } else if (data.error) {
+            throw new Error(data.error);
         } else {
-            throw new Error(data.message || 'Error al cargar noticias');
+            throw new Error('Respuesta inesperada del servidor');
         }
     } catch (error) {
-        console.error('Error:', error);
+        console.error('Error al cargar noticias:', error);
         showError(error.message);
     } finally {
         isLoading = false;
@@ -142,18 +138,18 @@ async function loadMoreNews() {
 }
 
 function buildApiUrl() {
-    let url;
+    const params = new URLSearchParams();
     
     if (searchQuery) {
-        // Usar endpoint everything para búsquedas
-        url = `${BASE_URL}/everything?q=${encodeURIComponent(searchQuery)}&apiKey=${API_KEY}&pageSize=20&page=${currentPage}&sortBy=publishedAt&language=es`;
+        params.append('query', searchQuery);
     } else {
-        // Usar endpoint top-headlines para categorías
         const apiCategory = categoryMap[currentCategory] || currentCategory;
-        url = `${BASE_URL}/top-headlines?category=${apiCategory}&apiKey=${API_KEY}&pageSize=20&page=${currentPage}&country=us`;
+        params.append('category', apiCategory);
     }
     
-    return url;
+    params.append('page', currentPage);
+    
+    return `${API_ROUTE}?${params.toString()}`;
 }
 
 function displayNews(articles) {
@@ -260,30 +256,6 @@ function clearNewsGrid() {
     hideLoadMoreButton();
 }
 
-function showApiKeyError() {
-    newsGrid.innerHTML = `
-        <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; background: var(--bg-card); border-radius: var(--radius-lg); border: 1px solid var(--border-color);">
-            <i class="fas fa-key" style="font-size: 3rem; color: var(--accent-color); margin-bottom: 1rem;"></i>
-            <h3 style="margin-bottom: 1rem; color: var(--text-primary);">API Key Requerida</h3>
-            <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
-                Para usar esta aplicación, necesitas obtener una API key gratuita de NewsAPI.
-            </p>
-            <div style="background: var(--bg-secondary); padding: 1rem; border-radius: var(--radius); margin-bottom: 1.5rem;">
-                <p style="font-size: 0.875rem; color: var(--text-secondary);">
-                    1. Visita <a href="https://newsapi.org/register" target="_blank" style="color: var(--primary-color);">newsapi.org/register</a><br>
-                    2. Regístrate gratis<br>
-                    3. Copia tu API key<br>
-                    4. Reemplaza "TU_API_KEY_AQUI" en el archivo script.js
-                </p>
-            </div>
-            <a href="https://newsapi.org/register" target="_blank" style="display: inline-block; padding: 0.75rem 1.5rem; background: var(--primary-color); color: white; text-decoration: none; border-radius: var(--radius); font-weight: 500;">
-                Obtener API Key Gratis
-            </a>
-        </div>
-    `;
-    hideLoading();
-}
-
 // Funciones de utilidad
 function debounce(func, wait) {
     let timeout;
@@ -300,4 +272,3 @@ function debounce(func, wait) {
 // Búsqueda con debounce para mejor UX
 const debouncedSearch = debounce(performSearch, 500);
 searchInput.addEventListener('input', debouncedSearch);
-
