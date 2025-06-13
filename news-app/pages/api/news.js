@@ -1,7 +1,7 @@
 // api/news.js
 export default async function handler(req, res) {
   const { category = 'general', q } = req.query;
-  const API_KEY = process.env.API_KEY; // Tu clave de NewsAPI
+  const API_KEY = process.env.API_KEY;
   
   if (!API_KEY) {
     return res.status(500).json({ error: 'API key not configured' });
@@ -16,6 +16,11 @@ export default async function handler(req, res) {
     }
 
     const response = await fetch(url);
+    
+    if (!response.ok) {
+      throw new Error(`NewsAPI error: ${response.status}`);
+    }
+    
     const data = await response.json();
     
     // Enviar los datos al cliente
